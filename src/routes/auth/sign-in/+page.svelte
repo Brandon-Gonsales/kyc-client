@@ -176,7 +176,8 @@
 				>
 					Cambiar tipo de usuario
 				</button>
-			</div>	
+			</div>
+	
 		</div>
 	</div>
 </div>

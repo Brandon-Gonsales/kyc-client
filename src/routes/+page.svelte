@@ -84,37 +84,54 @@
         <p class="text-light-black/70 dark:text-dark-white/70 text-lg">Selecciona tu tipo de cuenta para continuar</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-        <!-- Student Card -->
-        <button 
-            onclick={() => handleSelectRole('student')}
-            class="group relative flex flex-col items-center p-8 rounded-2xl bg-white dark:bg-dark-surface border-2 border-transparent hover:border-light-tertiary dark:hover:border-dark-tertiary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-        >
-            <div class="h-24 w-24 mb-6 rounded-full bg-light-primary_d dark:bg-dark-primary_d flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span class="text-4xl">🎓</span>
-            </div>
-            <h2 class="text-2xl font-bold text-light-black dark:text-dark-white mb-2">Estudiante</h2>
-            
-            <div class="mt-6 px-6 py-2 rounded-full bg-light-primary dark:bg-dark-primary text-light-tertiary dark:text-dark-tertiary font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Ingresar como Estudiante
-            </div>
-        </button>
+    <div class="flex flex-wrap gap-4 justify-center max-w-2xl mx-auto px-4">
 
-        <!-- Admin Card -->
-        <button 
-            onclick={() => handleSelectRole('admin')}
-            class="group relative flex flex-col items-center p-8 rounded-2xl bg-white dark:bg-dark-surface border-2 border-transparent hover:border-light-secondary dark:hover:border-dark-secondary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-        >
-            <div class="h-24 w-24 mb-6 rounded-full bg-light-primary_d dark:bg-dark-primary_d flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span class="text-4xl">💼</span>
-            </div>
-            <h2 class="text-2xl font-bold text-light-black dark:text-dark-white mb-2">Administrativo</h2>
+    <button 
+        onclick={() => handleSelectRole('student')}
+        class="group relative overflow-hidden px-8 py-4 rounded-lg bg-light-primary dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-light-secondary dark:hover:border-light-secondary transition-all duration-300 hover:shadow-lg hover:shadow-light-four hover:-translate-y-1"
+    >
+
+        <div class="absolute inset-0 bg-gradient-to-r from-light-primary_d to-light-tertiary translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+        
+
+        <div class="relative z-10 flex items-center gap-3">
+            <svg class="w-6 h-6 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors duration-300 group-hover:scale-110 group-hover:rotate-12 transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+            </svg>
             
-            <div class="mt-6 px-6 py-2 rounded-full bg-light-primary dark:bg-dark-primary text-light-secondary dark:text-dark-secondary font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Ingresar como Administrativo
-            </div>
-        </button>
-    </div>
+            <span class="text-lg font-semibold text-gray-800 dark:text-gray-200 group-hover:text-white transition-colors duration-300">
+                Estudiante
+            </span>
+        </div>
+    </button>
+
+
+    <button 
+        onclick={() => handleSelectRole('admin')}
+        class="group relative overflow-hidden px-8 py-4 rounded-lg bg-light-primary dark:bg-dark-primary border-2 border-gray-200 dark:border-gray-700 hover:border-light-secondary dark:hover:border-light-secondary transition-all duration-300 hover:shadow-lg hover:shadow-light-four hover:-translate-y-1"
+    >
+      
+        <div class="absolute inset-0 bg-gradient-to-r from-light-tertiary to-light-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+        
+    
+        <div class="relative z-10 flex items-center gap-3">
+            <svg class="w-6 h-6 text-gray-700 dark:text-gray-300 group-hover:text-white transition-colors duration-300 group-hover:scale-110 group-hover:-rotate-12 transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                <path d="m9 12 2 2 4-4" />
+            </svg>
+            
+            <span class="text-lg font-semibold text-gray-800 dark:text-gray-200 group-hover:text-white transition-colors duration-300">
+                Administrativo
+            </span>
+        </div>
+    </button>
+</div>
   </div>
 </div>
 {/if}
+<style>
+    button {
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>
