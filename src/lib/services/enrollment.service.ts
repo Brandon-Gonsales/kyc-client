@@ -17,6 +17,11 @@ class EnrollmentService {
 	async delete(id: string): Promise<Enrollment> {
 		return await apiKyC.delete<Enrollment>(`/enrollments/${id}`);
 	}
+
+	async getByStudentId(studentId: string): Promise<Enrollment[]> {
+		return await apiKyC.get<Enrollment[]>(`/enrollments/student/${studentId}`);
+	}
 }
 
 export const enrollmentService = new EnrollmentService();
+

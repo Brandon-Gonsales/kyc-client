@@ -40,7 +40,7 @@
 					</div>
 
 					<!-- Body -->
-					<div class="w-full h-full">
+					<div class="w-full h-full p-4">
 						{@render children?.()}
 					</div>
 				</div>

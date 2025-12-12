@@ -64,3 +64,4 @@ export { default as SendIcon } from './sendIcon.svelte';
 export { default as Menu2Icon } from './menu2Icon.svelte';
 export { default as PhoneIcon } from './phoneIcon.svelte';
 export { default as ExclamationIcon } from './exclamationIcon.svelte';
+export { default as UploadIcon } from './uploadIcon.svelte';

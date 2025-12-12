@@ -1,209 +1,115 @@
 <script lang="ts">
-	import { paymentService } from '$lib/services';
-	import type { CreatePaymentRequest, Payment, Student, Course, Enrollment } from '$lib/interfaces';
+	import { onMount } from 'svelte';
+	import { enrollmentService, paymentService } from '$lib/services';
+	import type { Enrollment, CreatePaymentRequest } from '$lib/interfaces';
+	import { userStore } from '$lib/stores/userStore';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
 	import { alert } from '$lib/utils';
-	import { CheckIcon } from '$lib/icons/outline';
+	import { UploadIcon } from '$lib/icons/outline';
 
 	interface Props {
-		payment?: Payment | null;
-		students: Student[];
-		courses: Course[];
-		enrollments: Enrollment[];
 		onSuccess: () => void;
 		onCancel: () => void;
 	}
 
-	let { payment = null, students = [], courses = [], enrollments = [], onSuccess, onCancel }: Props = $props();
+	let { onSuccess, onCancel }: Props = $props();
 
-	let isEditMode = $derived(!!payment);
+	let enrollments: Enrollment[] = $state([]);
+	let loading = $state(true);
 	let saving = $state(false);
+	
+	let selectedEnrollmentId = $state('');
+	let amount = $state('');
+	let transactionNumber = $state('');
+	let concept = $state('MATRICULA');
+	let voucherUrl = $state('');
 
-	let formData: CreatePaymentRequest = $state({
-		inscripcion_id: '',
-		estudiante_id: '',
-		curso_id: '',
-		numero_transaccion: '',
-		concepto: '',
-		cantidad_pago: 0,
-		descuento_aplicado: 0,
-		imagen_voucher_url: '',
-		numero_cuota: 1
-	});
-
-	let editData = $state({
-		estado_pago: 'pendiente',
-		fecha_pagada: ''
-	});
-
-	$effect(() => {
-		if (payment) {
-			formData = {
-				inscripcion_id: payment.inscripcion_id,
-				estudiante_id: payment.estudiante_id,
-				curso_id: payment.curso_id,
-				numero_transaccion: payment.numero_transaccion,
-				concepto: payment.concepto,
-				cantidad_pago: payment.cantidad_pago,
-				descuento_aplicado: payment.descuento_aplicado,
-				imagen_voucher_url: payment.imagen_voucher_url,
-				numero_cuota: 1 // Default or fetch if available
-			};
-			editData = {
-				estado_pago: payment.estado_pago,
-				fecha_pagada: '' // Not in interface but might be useful
-			};
-		} else {
-			formData = {
-				inscripcion_id: '',
-				estudiante_id: '',
-				curso_id: '',
-				numero_transaccion: '',
-				concepto: '',
-				cantidad_pago: 0,
-				descuento_aplicado: 0,
-				imagen_voucher_url: '',
-				numero_cuota: 1
-			};
-			editData = {
-				estado_pago: 'pendiente',
-				fecha_pagada: ''
-			};
+	onMount(async () => {
+		try {
+			if ($userStore.user?._id) {
+				enrollments = await enrollmentService.getByStudentId($userStore.user._id);
+			}
+		} catch (error) {
+			console.error(error);
+			alert('error', 'Error al cargar inscripciones');
+		} finally {
+			loading = false;
 		}
 	});
-
-	function handleEnrollmentChange(enrollmentId: string) {
-		const enrollment = enrollments.find(e => e._id === enrollmentId);
-		if (enrollment) {
-			formData.estudiante_id = enrollment.estudiante_id;
-			formData.curso_id = enrollment.curso_id;
-		}
-	}
 
 	async function handleSubmit() {
+		if (!selectedEnrollmentId || !amount || !transactionNumber || !voucherUrl) {
+			alert('error', 'Todos los campos son obligatorios');
+			return;
+		}
+
 		saving = true;
 		try {
-			if (isEditMode && payment) {
-				await paymentService.update(payment._id, {
-					...formData,
-					estado_pago: editData.estado_pago,
-					fecha_pagada: editData.fecha_pagada || undefined
-				});
-				alert('success', 'Pago actualizado correctamente');
-			} else {
-				await paymentService.create(formData);
-				alert('success', 'Pago creado correctamente');
-			}
+			// 1. Create Payment directly with URL
+			const payload: CreatePaymentRequest = {
+				inscripcion_id: selectedEnrollmentId,
+				numero_transaccion: transactionNumber,
+				concepto: concept,
+				cantidad_pago: Number(amount),
+				comprobante_url: voucherUrl
+			};
+
+			await paymentService.create(payload);
+			alert('success', 'Pago registrado correctamente');
 			onSuccess();
-		} catch (e: any) {
-			alert('error', e.message || 'Error al guardar pago');
+		} catch (error: any) {
+			console.error(error);
+			alert('error', error.message || 'Error al registrar pago');
 		} finally {
 			saving = false;
 		}
 	}
 </script>
 
-	<form class="space-y-6" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			{#if !isEditMode}
-				<div class="md:col-span-2">
-					<Select
-						label="Inscripción (Estudiante - Curso)"
-						bind:value={formData.inscripcion_id}
-						onchange={() => handleEnrollmentChange(formData.inscripcion_id)}
-						required
-					>
-						<option value="">Seleccione una inscripción</option>
-						{#each enrollments as enrollment}
-							{@const s = students.find(s => s._id === enrollment.estudiante_id)}
-							{@const c = courses.find(c => c._id === enrollment.curso_id)}
-							<option value={enrollment._id}>
-								{s?.nombre || 'Unknown'} - {c?.nombre_programa || 'Unknown'} ({enrollment.saldo_pendiente} pendiente)
-							</option>
-						{/each}
-					</Select>
-				</div>
-			{:else}
-				<div class="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-					<p class="text-sm text-gray-500 dark:text-gray-400">Estudiante</p>
-					<p class="font-medium text-gray-900 dark:text-white">{students.find(s => s._id === formData.estudiante_id)?.nombre || 'Desconocido'}</p>
-					<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Curso</p>
-					<p class="font-medium text-gray-900 dark:text-white">{courses.find(c => c._id === formData.curso_id)?.nombre_programa || 'Desconocido'}</p>
-				</div>
-			{/if}
+<form class="space-y-6" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+	<div>
+		<label for="enrollment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Inscripción</label>
+		{#if loading}
+			<div class="h-10 w-full animate-pulse rounded-md bg-gray-200 dark:bg-gray-700"></div>
+		{:else}
+			<select
+				id="enrollment"
+				bind:value={selectedEnrollmentId}
+				required
+				class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+			>
+				<option value="">Seleccione una inscripción</option>
+				{#each enrollments as enrollment}
+					<option value={enrollment._id}>
+						{enrollment.created_at.split('T')[0]} - Total: {enrollment.total_a_pagar} Bs. (Saldo: {enrollment.saldo_pendiente} Bs.)
+					</option>
+				{/each}
+			</select>
+		{/if}
+	</div>
 
-			<Input
-				label="Concepto"
-				id="concepto"
-				bind:value={formData.concepto}
-				required
-				placeholder="Matrícula..."
-			/>
-			<Input
-				label="Número de Transacción"
-				id="numero_transaccion"
-				bind:value={formData.numero_transaccion}
-				required
-				placeholder="TRX-..."
-			/>
-			<Input
-				label="Monto"
-				id="cantidad_pago"
-				type="number"
-				bind:value={formData.cantidad_pago}
-				required
-			/>
-			<Input
-				label="Descuento Aplicado"
-				id="descuento_aplicado"
-				type="number"
-				bind:value={formData.descuento_aplicado}
-				required
-			/>
-			<Input
-				label="Número de Cuota"
-				id="numero_cuota"
-				type="number"
-				bind:value={formData.numero_cuota}
-				required
-			/>
-			<Input
-				label="URL Voucher"
-				id="imagen_voucher_url"
-				bind:value={formData.imagen_voucher_url}
-				placeholder="https://..."
-			/>
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<Select label="Concepto" bind:value={concept} required>
+			<option value="MATRICULA">Matrícula</option>
+			<option value="CUOTA">Cuota</option>
+			<option value="TOTAL">Pago Total</option>
+			<option value="OTRO">Otro</option>
+		</Select>
 
-			{#if isEditMode}
-				<Select
-					label="Estado"
-					bind:value={editData.estado_pago}
-					required
-				>
-					<option value="pendiente">Pendiente</option>
-					<option value="aprobado">Aprobado</option>
-					<option value="rechazado">Rechazado</option>
-				</Select>
-				<Input
-					label="Fecha Pagada"
-					id="fecha_pagada"
-					type="datetime-local"
-					bind:value={editData.fecha_pagada}
-				/>
-			{/if}
-		</div>
+		<Input label="Monto (Bs)" type="number" bind:value={amount} required placeholder="0.00" min="1" step="0.01" />
+	</div>
 
-		<div class="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-			<Button type="button" variant="secondary" onclick={onCancel}>
-				Cancelar
-			</Button>
-			<Button type="submit" loading={saving}>
-				{#snippet leftIcon()}
-					<CheckIcon class="size-5" />
-				{/snippet}
-				Guardar
-			</Button>
-		</div>
-	</form>
+	<Input label="Número de Transacción" bind:value={transactionNumber} required placeholder="Ej: 12345678" />
+
+	<Input label="URL del Comprobante" bind:value={voucherUrl} required placeholder="https://..." />
+
+	<div class="flex justify-end gap-3 pt-4">
+		<Button type="button" variant="secondary" onclick={onCancel} disabled={saving}>Cancelar</Button>
+		<Button type="submit" loading={saving}>
+			{#snippet leftIcon()} <UploadIcon class="size-5" /> {/snippet}
+			Registrar Pago
+		</Button>
+	</div>
+</form>

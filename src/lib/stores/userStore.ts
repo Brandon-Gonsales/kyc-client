@@ -73,18 +73,18 @@ function createUserStore() {
 					token,
 					isAuthenticated: true,
 					loading: false,
-					rol: user.role
+					role: user.role
 				}));
 				
 				if (browser) {
 					localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 				}
 
-			} catch (error: any) {
+			} catch (error: unknown) {
 				update(state => ({
 					...state,
 					loading: false,
-					error: error.message || 'Error al iniciar sesión'
+					error: error instanceof Error ? error.message : 'Error al iniciar sesión'
 				}));
 				throw error;
 			}
@@ -122,7 +122,7 @@ function createUserStore() {
 							loading: false,
 							error: null,
 							loginType,
-							role: user.rol
+							role: user.role
 						});
 					} catch (e) {
 						console.error('Error parsing user data from local storage', e);

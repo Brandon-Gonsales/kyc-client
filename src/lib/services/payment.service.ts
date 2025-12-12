@@ -2,8 +2,12 @@ import { apiKyC } from '$lib/config';
 import type { Payment, CreatePaymentRequest, UpdatePaymentRequest } from '$lib/interfaces';
 
 class PaymentService {
-	async getAll(skip = 0, limit = 100): Promise<Payment[]> {
-		return await apiKyC.get<Payment[]>(`/payments/?skip=${skip}&limit=${limit}`);
+	async getAll(skip = 0, limit = 100, estado?: string): Promise<Payment[]> {
+		let url = `/payments/?skip=${skip}&limit=${limit}`;
+		if (estado) {
+			url += `&estado=${estado}`;
+		}
+		return await apiKyC.get<Payment[]>(url);
 	}
 
 	async create(data: CreatePaymentRequest): Promise<Payment> {
@@ -19,8 +23,13 @@ class PaymentService {
 	}
 
 	async approve(id: string): Promise<Payment> {
-		return await apiKyC.post<Payment>(`/payments/${id}/approve`, {});
+		return await apiKyC.put<Payment>(`/payments/${id}/aprobar`, {});
 	}
+
+	async reject(id: string, motivo: string): Promise<Payment> {
+		return await apiKyC.put<Payment>(`/payments/${id}/rechazar`, { motivo });
+	}
+
 }
 
 export const paymentService = new PaymentService();

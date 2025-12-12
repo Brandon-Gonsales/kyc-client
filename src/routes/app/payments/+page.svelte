@@ -1,309 +1,408 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { paymentService, studentService, courseService, enrollmentService } from '$lib/services';
-	import type { Payment, Student, Course, Enrollment } from '$lib/interfaces';
+	import { paymentService } from '$lib/services';
+	import type { Payment } from '$lib/interfaces';
+	import { userStore } from '$lib/stores/userStore';
 	import Button from '$lib/components/ui/button.svelte';
 	import Heading from '$lib/components/ui/heading.svelte';
-	import Card from '$lib/components/ui/card.svelte';
-	import DropdownMenu from '$lib/components/ui/dropdownMenu.svelte';
-	import ModalConfirm from '$lib/components/ui/modalConfirm.svelte';
 	import Modal from '$lib/components/ui/modal.svelte';
+	import ModalConfirm from '$lib/components/ui/modalConfirm.svelte';
+	import DropdownMenu from '$lib/components/ui/dropdownMenu.svelte';
 	import TableSkeleton from '$lib/components/skeletons/TableSkeleton.svelte';
 	import PaymentForm from '$lib/features/payments/PaymentForm.svelte';
-	import { alert } from '$lib/utils';
-	import { PlusIcon, DotsVerticalIcon } from '$lib/icons/outline';
+	import { 
+		PlusIcon, 
+		DotsVerticalIcon, 
+		CheckIcon, 
+		XIcon, 
+		RefreshIcon 
+	} from '$lib/icons/outline';
+	import { alert, formatDate, formatCurrency } from '$lib/utils';
+	import Select from '$lib/components/ui/select.svelte';
 
 	let payments: Payment[] = [];
-	let studentsMap: Record<string, Student> = {};
-	let coursesMap: Record<string, Course> = {};
-	let loading = false;
-	let error = '';
-	let skip = 0;
+	let loading = true;
+	let page = 0;
 	let limit = 100;
+	let filterEstado = '';
 
-	// Modal state
-	let isFormOpen = false;
+	// State
+	let isCreateModalOpen = false;
+	let isApproveModalOpen = false;
+	let isRejectModalOpen = false;
+	
+	let paymentToAction: Payment | null = null;
+	let actionLoading = false;
+	let rejectReason = '';
+
+	// Dropdown
+	let openDropdownId: string | null = null;
 	let selectedPayment: Payment | null = null;
-	let showDeleteModal = false;
-	let paymentToDelete: Payment | null = null;
-	let deleteLoading = false;
-let openDropdownId: string | null = null;
-	// Dropdown state
-	let enrollments: Enrollment[] = [];
-	let studentsList: Student[] = [];
-	let coursesList: Course[] = [];
 
-	onMount(() => {
-		loadData();
-	});
+	// Computed
+	$: isAdmin = $userStore.role === 'admin' || $userStore.role === 'superadmin';
+	$: isStudent = $userStore.role === 'student';
 
-	async function loadData() {
+	async function loadPayments() {
 		loading = true;
 		try {
-			const [paymentsData, studentsData, coursesData, enrollmentsData] = await Promise.all([
-				paymentService.getAll(skip, limit),
-				studentService.getAll(0, 1000),
-				courseService.getAll(0, 1000),
-				enrollmentService.getAll(0, 1000)
-			]);
-			
-			payments = paymentsData;
-			studentsList = studentsData;
-			coursesList = coursesData;
-			enrollments = enrollmentsData;
-			
-			studentsData.forEach(s => studentsMap[s._id] = s);
-			coursesData.forEach(c => coursesMap[c._id] = c);
-			
-		} catch (e: any) {
-			error = e.message || 'Error al cargar pagos';
-			alert('error', error);
+			// Pass filter if exists
+			const data = await paymentService.getAll(page * limit, limit, filterEstado || undefined);
+			payments = data;
+		} catch (error) {
+			console.error(error);
+			alert('error', 'Error al cargar pagos');
 		} finally {
 			loading = false;
 		}
 	}
 
-	function handleCreate() {
-		selectedPayment = null;
-		isFormOpen = true;
+	function handleFilterChange() {
+		loadPayments();
 	}
 
-	function handleEdit(payment: Payment) {
-		selectedPayment = payment;
-		isFormOpen = true;
+	onMount(() => {
+		loadPayments();
+	});
+
+	function toggleDropdown(id: string) {
+		openDropdownId = openDropdownId === id ? null : id;
 	}
 
-	function confirmDelete(payment: Payment) {
-		paymentToDelete = payment;
-		showDeleteModal = true;
+	// Actions
+	function handleApproveClick(payment: Payment) {
+		paymentToAction = payment;
+		isApproveModalOpen = true;
 		openDropdownId = null;
 	}
 
-	async function handleDelete() {
-		if (!paymentToDelete) return;
-		deleteLoading = true;
-		try {
-			await paymentService.delete(paymentToDelete._id);
-			alert('success', 'Pago eliminado correctamente');
-			payments = payments.filter(p => p._id !== paymentToDelete!._id);
-			showDeleteModal = false;
-		} catch (e: any) {
-			alert('error', e.message || 'Error al eliminar pago');
-		} finally {
-			deleteLoading = false;
-			paymentToDelete = null;
-		}
+	function handleRejectClick(payment: Payment) {
+		paymentToAction = payment;
+		rejectReason = '';
+		isRejectModalOpen = true;
+		openDropdownId = null;
 	}
 
-	async function handleApprove(id: string) {
+	async function confirmApprove() {
+		if (!paymentToAction) return;
+		actionLoading = true;
 		try {
-			await paymentService.approve(id);
+			await paymentService.approve(paymentToAction._id);
 			alert('success', 'Pago aprobado correctamente');
-			loadData(); // Reload to update status
-			openDropdownId = null;
-		} catch (e: any) {
-			alert('error', e.message || 'Error al aprobar pago');
+			isApproveModalOpen = false;
+			loadPayments();
+		} catch (error: any) {
+			alert('error', error.message || 'Error al aprobar pago');
+		} finally {
+			actionLoading = false;
+			paymentToAction = null;
 		}
 	}
 
-	function handleFormSuccess() {
-		isFormOpen = false;
-		loadData();
+	async function confirmReject() {
+		if (!paymentToAction) return;
+		if (!rejectReason.trim()) {
+			alert('error', 'Debe ingresar un motivo');
+			return;
+		}
+		actionLoading = true;
+		try {
+			await paymentService.reject(paymentToAction._id, rejectReason);
+			alert('success', 'Pago rechazado correctamente');
+			isRejectModalOpen = false;
+			loadPayments();
+		} catch (error: any) {
+			alert('error', error.message || 'Error al rechazar pago');
+		} finally {
+			actionLoading = false;
+			paymentToAction = null;
+			rejectReason = '';
+		}
 	}
 
-	function toggleDropdown(id: string) {
-		if (openDropdownId === id) {
-			openDropdownId = null;
-		} else {
-			openDropdownId = id;
-		}
+	function handleViewDetails(payment: Payment) {
+		selectedPayment = payment;
+		openDropdownId = null;
 	}
 
 	function getDropdownOptions(payment: Payment) {
-		const options = [
-			{
-				label: 'Editar',
-				id: 'edit',
-				icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>`,
-				action: () => handleEdit(payment)
-			},
-			{
-				label: 'Eliminar',
-				id: 'delete',
-				icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`,
-				action: () => confirmDelete(payment),
-				divider: true
-			}
-		];
+		const options = [];
 
-		if (payment.estado_pago === 'pendiente') {
-			options.unshift({
-				label: 'Aprobar',
-				id: 'approve',
-				icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-				action: () => handleApprove(payment._id)
-			});
+		options.push({
+			label: 'Ver Detalles',
+			id: 'view',
+			icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>`,
+			action: () => handleViewDetails(payment)
+		});
+
+		if (isAdmin && payment.estado_pago === 'pendiente') {
+			options.push(
+				{
+					label: 'Aprobar Pago',
+					id: 'approve',
+					icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+					action: () => handleApproveClick(payment)
+				},
+				{
+					label: 'Rechazar Pago',
+					id: 'reject',
+					icon: `<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+					action: () => handleRejectClick(payment)
+				}
+			);
 		}
 
 		return options;
 	}
 
-	function getStudentName(id: string) {
-		return studentsMap[id]?.nombre || 'Desconocido';
-	}
-
-	function getCourseName(id: string) {
-		return coursesMap[id]?.nombre_programa || 'Desconocido';
+	function getStatusColor(status: string) {
+		switch (status) {
+			case 'pendiente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+			case 'aprobado': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+			case 'rechazado': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+			default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+		}
 	}
 </script>
 
 <div class="space-y-6">
-	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-		<Heading level="h1">Pagos</Heading>
-		<Button onclick={handleCreate}>
-			{#snippet leftIcon()}
-				<PlusIcon class="size-5" />
-			{/snippet}
-			Nuevo Pago
-		</Button>
+	<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+		<div>
+			<Heading level="h1">Gestión de Pagos</Heading>
+			<p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+				{#if isAdmin}Administre los pagos recibidos{:else}Historial de sus pagos realizados{/if}
+			</p>
+		</div>
+		
+		<div class="flex gap-3 w-full md:w-auto">
+			<div class="w-40">
+				<select 
+					bind:value={filterEstado} 
+					onchange={handleFilterChange}
+					class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm h-10"
+				>
+					<option value="">Todos</option>
+					<option value="pendiente">Pendientes</option>
+					<option value="aprobado">Aprobados</option>
+					<option value="rechazado">Rechazados</option>
+				</select>
+			</div>
+			
+			{#if isStudent}
+				<Button onclick={() => isCreateModalOpen = true}>
+					{#snippet leftIcon()} <PlusIcon class="size-5" /> {/snippet}
+					Registrar Pago
+				</Button>
+			{/if}
+			
+			<Button variant="secondary" onclick={loadPayments} loading={loading}>
+				{#snippet leftIcon()} <RefreshIcon class="size-5" /> {/snippet}
+			</Button>
+		</div>
 	</div>
 
-	{#if loading}
-		<TableSkeleton columns={6} rows={5} />
-	{:else if payments.length === 0}
-		<div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
-			<p class="text-gray-500 dark:text-gray-400">No hay pagos registrados.</p>
-		</div>
+	{#if loading && payments.length === 0}
+		<TableSkeleton columns={7} rows={5} />
 	{:else}
-		<!-- Desktop Table -->
 		<div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow">
-			<table class="divide-y divide-gray-200 dark:divide-gray-700 w-full table-auto">
-				<thead class="bg-gray-50 dark:bg-gray-900">
-					<tr>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estudiante</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Concepto</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monto</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-						<th scope="col" class="relative px-6 py-3">
-							<span class="sr-only">Acciones</span>
-						</th>
-					</tr>
-				</thead>
-				<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-					{#each payments as payment}
+			<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50 dark:bg-gray-800">
 						<tr>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm font-medium text-gray-900 dark:text-white">{getStudentName(payment.estudiante_id)}</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">{getCourseName(payment.curso_id)}</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900 dark:text-white">{payment.concepto}</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">TRX: {payment.numero_transaccion}</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm font-bold text-gray-900 dark:text-white">{payment.cantidad_pago}</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900 dark:text-white">{new Date(payment.fecha_subida).toLocaleDateString()}</div>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.estado_pago === 'aprobado' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
-									{payment.estado_pago}
-								</span>
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-								<button onclick={() => toggleDropdown(payment._id)} class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-									<DotsVerticalIcon class="size-5" />
-								</button>
-								{#if openDropdownId === payment._id}
-									<div class="absolute right-0 mt-2 w-48 z-10">
-										<DropdownMenu 
-											options={getDropdownOptions(payment)} 
-											isOpen={true} 
-											width="w-48" 
-											class="origin-top-right right-0"
-										/>
-									</div>
-								{/if}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-
-		<!-- Mobile Cards -->
-		<div class="md:hidden grid grid-cols-1 gap-4">
-			{#each payments as payment}
-				<Card>
-					<div class="flex items-center justify-between mb-4">
-						<div>
-							<h3 class="text-sm font-medium text-gray-900 dark:text-white">{getStudentName(payment.estudiante_id)}</h3>
-							<p class="text-xs text-gray-500 dark:text-gray-400">{payment.concepto}</p>
-						</div>
-						<div class="relative">
-							<button onclick={() => toggleDropdown(payment._id)} class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-								<DotsVerticalIcon class="size-5" />
-							</button>
-							{#if openDropdownId === payment._id}
-								<div class="absolute right-0 mt-2 w-48 z-10">
-									<DropdownMenu 
-										options={getDropdownOptions(payment)} 
-										isOpen={true} 
-										width="w-48" 
-										class="origin-top-right right-0"
-									/>
-								</div>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concepto</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Transacción</th>
+							{#if isAdmin}
+								<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
 							{/if}
-						</div>
-					</div>
-					<div class="space-y-2 text-sm">
-						<div class="flex justify-between">
-							<span class="text-gray-500 dark:text-gray-400">Monto:</span>
-							<span class="font-bold text-gray-900 dark:text-white">{payment.cantidad_pago}</span>
-						</div>
-						<div class="flex justify-between">
-							<span class="text-gray-500 dark:text-gray-400">Fecha:</span>
-							<span class="font-medium text-gray-900 dark:text-white">{new Date(payment.fecha_subida).toLocaleDateString()}</span>
-						</div>
-						<div class="flex justify-between">
-							<span class="text-gray-500 dark:text-gray-400">Estado:</span>
-							<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.estado_pago === 'aprobado' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
-								{payment.estado_pago}
-							</span>
-						</div>
-					</div>
-				</Card>
-			{/each}
+							<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+							<th scope="col" class="relative px-6 py-3"><span class="sr-only">Acciones</span></th>
+						</tr>
+					</thead>
+					<tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+						{#each payments as payment}
+							<tr>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									{formatDate(payment.created_at)}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+									{payment.concepto}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+									{formatCurrency(payment.cantidad_pago)}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+									{payment.numero_transaccion}
+								</td>
+								{#if isAdmin}
+									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+										<!-- We might not have student name populated in payment object, checking interface... -->
+										<!-- Interface implies just `estudiante_id`. If backend populates it, great. If not, we show ID or need to fetch. -->
+										<!-- Assuming backend populates or we just show ID for MVP unless we want to fetch user. -->
+										<!-- For now, check if student_id is an object or string. Interface says string. -->
+										<!-- Display ID or '...' if simple string. -->
+										{payment.estudiante_id} 
+									</td>
+								{/if}
+								<td class="px-6 py-4 whitespace-nowrap">
+									<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.estado_pago)}`}>
+										{payment.estado_pago}
+									</span>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+									<button onclick={() => toggleDropdown(payment._id)} class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+										<DotsVerticalIcon class="size-5" />
+									</button>
+									{#if openDropdownId === payment._id}
+										<div class="absolute right-0 mt-2 w-48 z-10">
+											<DropdownMenu 
+												options={getDropdownOptions(payment)} 
+												isOpen={true} 
+												width="w-48" 
+												class="origin-top-right right-0"
+											/>
+										</div>
+									{/if}
+								</td>
+							</tr>
+						{/each}
+						{#if payments.length === 0}
+							<tr>
+								<td colspan={isAdmin ? 7 : 6} class="px-6 py-4 text-center text-sm text-gray-500">
+									No se encontraron pagos.
+								</td>
+							</tr>
+						{/if}
+					</tbody>
+				</table>
+		
 		</div>
 	{/if}
 
-	<!-- Create/Edit Modal -->
+	<!-- Create Payment Modal -->
 	<Modal
-		isOpen={isFormOpen}
-		title={selectedPayment ? 'Editar Pago' : 'Nuevo Pago'}
-		onClose={() => isFormOpen = false}
-		maxWidth="sm:max-w-4xl"
+		isOpen={isCreateModalOpen}
+		title="Registrar Nuevo Pago"
+		onClose={() => isCreateModalOpen = false}
+		maxWidth="sm:max-w-xl"
 	>
-		<PaymentForm
-			payment={selectedPayment}
-			students={studentsList}
-			courses={coursesList}
-			enrollments={enrollments}
-			onSuccess={handleFormSuccess}
-			onCancel={() => isFormOpen = false}
+		<PaymentForm 
+			onSuccess={() => {
+				isCreateModalOpen = false;
+				loadPayments();
+			}}
+			onCancel={() => isCreateModalOpen = false}
 		/>
 	</Modal>
 
+	<!-- Approve Confirmation Modal -->
 	<ModalConfirm
-		isOpen={showDeleteModal}
-		message={`¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.`}
-		onConfirm={handleDelete}
-		onCancel={() => {
-			showDeleteModal = false;
-			paymentToDelete = null;
-		}}
-		loading={deleteLoading}
+		isOpen={isApproveModalOpen}
+		message={`¿Confirma que desea APROBAR este pago de ${formatCurrency(paymentToAction?.cantidad_pago || 0)}?`}
+		onConfirm={confirmApprove}
+		onCancel={() => isApproveModalOpen = false}
+		loading={actionLoading}
 	/>
+
+	<!-- Reject Input Modal -->
+	<Modal
+		isOpen={isRejectModalOpen}
+		title="Rechazar Pago"
+		onClose={() => isRejectModalOpen = false}
+		maxWidth="sm:max-w-lg"
+	>
+		<div class="space-y-4 p-4">
+			<p class="text-sm text-gray-500">
+				Ingrese el motivo del rechazo para informar al estudiante.
+			</p>
+			<div>
+				<label for="rejectReason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motivo</label>
+				<textarea
+					id="rejectReason"
+					bind:value={rejectReason}
+					rows="3"
+					class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm"
+					placeholder="Ej: Comprobante ilegible, monto incorrecto..."
+				></textarea>
+			</div>
+			<div class="flex justify-end gap-3 mt-4">
+				<Button variant="secondary" onclick={() => isRejectModalOpen = false} disabled={actionLoading}>Cancelar</Button>
+				<Button variant="destructive" onclick={confirmReject} loading={actionLoading}>Rechazar</Button>
+			</div>
+			<div class="flex justify-end gap-3 mt-4">
+				<Button variant="secondary" onclick={() => isRejectModalOpen = false} disabled={actionLoading}>Cancelar</Button>
+				<Button variant="destructive" onclick={confirmReject} loading={actionLoading}>Rechazar</Button>
+			</div>
+		</div>
+	</Modal>
+
+	<!-- View Payment Details Modal -->
+	<Modal
+		isOpen={!!selectedPayment}
+		title="Detalles del Pago"
+		onClose={() => selectedPayment = null}
+		maxWidth="sm:max-w-2xl"
+	>
+		{#if selectedPayment}
+			<div class="space-y-6 p-4">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Estudiante ID</label>
+						<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">{selectedPayment.estudiante_id}</p>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Fecha</label>
+						<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">{formatDate(selectedPayment.created_at)}</p>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Concepto</label>
+						<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">{selectedPayment.concepto}</p>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Monto</label>
+						<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">{formatCurrency(selectedPayment.cantidad_pago)}</p>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Nº Transacción</label>
+						<p class="text-sm font-medium text-gray-900 dark:text-white mt-1">{selectedPayment.numero_transaccion}</p>
+					</div>
+					<div>
+						<label class="block text-xs font-medium text-gray-500 uppercase">Estado</label>
+						<span class={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(selectedPayment.estado_pago)}`}>
+							{selectedPayment.estado_pago}
+						</span>
+					</div>
+				</div>
+
+				<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comprobante</label>
+					{#if selectedPayment.comprobante_url}
+						<div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-900 flex justify-center items-center min-h-[200px]">
+							{#if selectedPayment.comprobante_url.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) || selectedPayment.comprobante_url.includes('cloudinary')} 
+								<!-- Simple heuristic for images, assuming cloudinary urls without specific extension might be images or using img tag handles it if it is an image resource -->
+								<img 
+									src={selectedPayment.comprobante_url} 
+									alt="Comprobante" 
+									class="max-w-full max-h-[500px] object-contain" 
+								/>
+							{:else}
+								<div class="text-center p-6">
+									<p class="text-sm text-gray-500 mb-2">El comprobante es un documento (PDF u otro).</p>
+									<Button variant="outline" onclick={() => window.open(selectedPayment?.comprobante_url, '_blank')}>
+										Abrir en nueva pestaña
+									</Button>
+								</div>
+							{/if}
+						</div>
+					{:else}
+						<p class="text-sm text-gray-500 italic">No hay comprobante adjunto.</p>
+					{/if}
+				</div>
+
+				<div class="flex justify-end">
+					<Button variant="secondary" onclick={() => selectedPayment = null}>Cerrar</Button>
+				</div>
+			</div>
+		{/if}
+	</Modal>
 </div>
