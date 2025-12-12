@@ -22,7 +22,7 @@
 		aria-modal="true"
 	>
 		<BlurOverlay class="overflow-y-auto">
-			<div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+			<div class="flex items-center justify-center text-center sm:p-0">
 				<div
 					class={`relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full ${maxWidth}`}
 				>
@@ -40,7 +40,7 @@
 					</div>
 
 					<!-- Body -->
-					<div class="px-4 py-5 sm:p-6">
+					<div class="w-full h-full">
 						{@render children?.()}
 					</div>
 				</div>

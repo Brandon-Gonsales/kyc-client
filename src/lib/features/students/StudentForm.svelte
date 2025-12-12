@@ -179,7 +179,7 @@
 <form class="space-y-8" onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
 	
 	<!-- Personal Information -->
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+	<div class="p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
 			<div class="rounded-lg bg-primary-50 p-2 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
 				<UserIcon class="size-6" />
@@ -203,8 +203,8 @@
 	</div>
 
 	<!-- Academic & Account Info -->
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
+	<div class="p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div class="mb-6 flex items-center gap-3 pb-4">
 			<div class="rounded-lg bg-orange-50 p-2 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
 				<CollectionIcon class="size-6" /> <!-- Using Collection as surrogate for Academic/Folder -->
 			</div>
@@ -237,8 +237,8 @@
 	</div>
 
 	<!-- Course Selection -->
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
+	<div class="p-6 shadow-sm">
+		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
 			<div class="rounded-lg bg-green-50 p-2 text-green-600 dark:bg-green-900/20 dark:text-green-400">
 				<CollectionIcon class="size-6" />
 			</div>
@@ -278,28 +278,28 @@
 	<!-- Documents & Title -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Documents -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-			<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
+		<div class="p-6 shadow-sm">
+			<div class="mb-6 flex items-center gap-3 pb-4">
 				<div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
 					<IdentificationIcon class="size-6" />
 				</div>
 				<div>
 					<Heading level="h4" class="text-lg font-semibold text-gray-900 dark:text-white">Documentación</Heading>
 					<p class="text-sm text-gray-500 dark:text-gray-400">Archivos adjuntos</p>
-				</div>
+				</div>	
 			</div>
 			
 			<div class="grid grid-cols-2 gap-4">
-				<FileUpload label="Foto de Perfil" accept="image/*" file={photoFile} onFileSelect={(f) => photoFile = f} initialUrl={student?.foto_url} />
-				<FileUpload label="Carnet (PDF)" accept=".pdf" file={carnetFile} onFileSelect={(f) => carnetFile = f} initialUrl={student?.ci_url} />
-				<FileUpload label="Curriculum (PDF)" accept=".pdf" file={cvFile} onFileSelect={(f) => cvFile = f} initialUrl={student?.cv_url} />
-				<FileUpload label="Afiliación (PDF)" accept=".pdf" file={afiliacionFile} onFileSelect={(f) => afiliacionFile = f} initialUrl={student?.afiliacion_url} />
+				<FileUpload label="Foto de Perfil" accept="image/*" file={photoFile} onFileSelect={(f) => photoFile = f} initialUrl={student?.foto_url} isEditable={isEditMode} />
+				<FileUpload label="Carnet (PDF)" accept=".pdf" file={carnetFile} onFileSelect={(f) => carnetFile = f} initialUrl={student?.ci_url} isEditable={isEditMode} />
+				<FileUpload label="Curriculum (PDF)" accept=".pdf" file={cvFile} onFileSelect={(f) => cvFile = f} initialUrl={student?.cv_url} isEditable={isEditMode} />
+				<FileUpload label="Afiliación (PDF)" accept=".pdf" file={afiliacionFile} onFileSelect={(f) => afiliacionFile = f} initialUrl={student?.afiliacion_url} isEditable={isEditMode} />
 			</div>
 		</div>
 
 		<!-- Title -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-			<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
+		<div class="p-6 shadow-sm">
+			<div class="mb-6 flex items-center gap-3 pb-4">
 				<div class="rounded-lg bg-purple-50 p-2 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
 					<AcademicCapIcon class="size-6" />
 				</div>

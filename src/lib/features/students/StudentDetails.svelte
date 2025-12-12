@@ -137,9 +137,9 @@
 	}
 </script>
 
-<div class="space-y-8 pb-20">
+<div class="space-y-8 w-full h-full">
 	<!-- Personal Information -->
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+	<div class=" border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
 			<div class="rounded-lg bg-primary-50 p-2 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
 				<UserIcon class="size-6" />
@@ -185,7 +185,7 @@
 	</div>
 
 	<!-- Academic & Account Info -->
-	<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+	<div class="p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
 			<div class="rounded-lg bg-orange-50 p-2 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400">
 				<CollectionIcon class="size-6" />
@@ -211,7 +211,7 @@
 	<!-- Documents & Title -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 		<!-- Documents -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div class="p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 			<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
 				<div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
 					<IdentificationIcon class="size-6" />
@@ -298,7 +298,7 @@
 		</div>
 
 		<!-- Title -->
-		<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+		<div class="p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 			<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-700">
 				<div class="rounded-lg bg-purple-50 p-2 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
 					<AcademicCapIcon class="size-6" />
@@ -319,20 +319,34 @@
 				</div>
 			{:else}
 				<div class="space-y-6">
+					<span class="text-sm font-medium text-gray-500">Estado</span>
 					<!-- Status Badge -->
-					<div class="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-						<span class="text-sm font-medium text-gray-500">Estado</span>
+					<div class="flex items-start md:items-center flex-col md:flex-row justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 gap-4">
+						
+						<div class="">
+							<div class="flex items-start flex-col gap-2">
+								<span class="text-sm font-medium text-gray-500">Fecha verificación</span>
+								{formatDate(student.titulo.fecha_verificacion)}
+							</div>
+							<div class="flex items-start flex-col gap-2">
+								<span class="text-sm font-medium text-gray-500">Verificado por</span>
+								{student.titulo.verificado_por}
+							</div>
+						</div>
 						{#if student.titulo.estado === 'verificado'}
 							<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-								<CheckIcon class="size-4" /> Validado
+								<CheckIcon class="size-4" /> {student.titulo.estado}
 							</span>
 						{:else if student.titulo.estado === 'rechazado'}
 							<div class="text-right">
 								<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-									<XIcon class="size-4" /> Rechazado
+									<XIcon class="size-4" /> {student.titulo.estado}
 								</span>
 								{#if (student.titulo as any).motivo_rechazo}
-									<p class="text-xs text-red-600 mt-1">{(student.titulo as any).motivo_rechazo}</p>
+								<div class="flex mt-1 gap-2">
+									<span class="text-xs font-medium text-gray-500">Motivo rechazo:</span>
+									<p class="text-xs text-red-600">{(student.titulo as any).motivo_rechazo}</p>
+								</div>
 								{/if}
 							</div>
 						{:else}
@@ -346,7 +360,7 @@
 					<div class="grid grid-cols-2 gap-4">
 						<Input label="Título" bind:value={verifyData.titulo} />
 						<Input label="Nº Registro" bind:value={verifyData.numero_titulo} />
-						<Input label="Año" bind:value={verifyData.año_expedicion} />
+						<Input label="Año expedición" bind:value={verifyData.año_expedicion} />
 						<Input label="Universidad" bind:value={verifyData.universidad} />
 					</div>
 
@@ -393,7 +407,7 @@
 						{/if}
 					</div>
 					
-					{#if student.titulo.estado !== 'verificado' && student.titulo.estado !== 'rechazado'}
+					<!-- {#if student.titulo.estado !== 'verificado' && student.titulo.estado !== 'rechazado'}
 						<div class="border-t pt-4 mt-4">
 							<label class="block text-sm font-medium text-red-700 mb-2">Rechazar Título</label>
 							<div class="flex gap-2">
@@ -401,7 +415,7 @@
 								<Button variant="destructive" loading={rejecting} onclick={handleReject}>Rechazar</Button>
 							</div>
 						</div>
-					{/if}
+					{/if} -->
 				</div>
 			{/if}
 		</div>

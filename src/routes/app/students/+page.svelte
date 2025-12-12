@@ -34,6 +34,7 @@
 		loading = true;
 		try {
 			const data = await studentService.getAll(page * limit, limit);
+			console.log("students", data);
 			students = data;
 		} catch (error) {
 			console.error(error);

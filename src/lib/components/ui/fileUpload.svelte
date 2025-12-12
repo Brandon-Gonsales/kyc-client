@@ -13,9 +13,10 @@
 		preview?: boolean;
 		loading?: boolean;
 		initialUrl?: string | null;
+		isEditable?: boolean;
 	}
 
-	let { label, accept = '*', file = null, loading = false, onFileSelect, id, preview = true, initialUrl = null }: Props = $props();
+	let { label, accept = '*', file = null, loading = false, onFileSelect, id, preview = true, initialUrl = null, isEditable = false }: Props = $props();
 
 	let inputRef: HTMLInputElement;
 	let dragOver = $state(false);
@@ -163,7 +164,7 @@
 					</div>
 				{/if}
 				
-				{#if !loading}
+				{#if !loading && !isEditable}
 					<button 
 						type="button" 
 						class="absolute -right-2 -top-2 rounded-full bg-red-100 p-1 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 shadow-sm z-10"
