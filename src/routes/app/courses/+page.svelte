@@ -128,16 +128,20 @@
 		</div>
 	{:else}
 		<!-- Desktop Table -->
-		<div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow">
+	{:else}
+		<!-- Desktop Table -->
+		<div class="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
 			<table class="divide-y divide-gray-200 dark:divide-gray-700 w-full table-auto">
 				<thead class="bg-gray-50 dark:bg-gray-900">
 					<tr>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Código</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Programa</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Modalidad</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fechas</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-						<th scope="col" class="relative px-6 py-3">
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Código/Prog.</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Detalles</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Costos Int.</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Costos Ext.</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Financiero</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fechas</th>
+						<th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+						<th scope="col" class="relative px-3 py-3">
 							<span class="sr-only">Acciones</span>
 						</th>
 					</tr>
@@ -145,27 +149,39 @@
 				<tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
 					{#each courses as course}
 						<tr>
-							<td class="px-6 py-4 whitespace-nowrap">
+							<td class="px-3 py-4 whitespace-nowrap">
 								<div class="text-sm font-medium text-gray-900 dark:text-white">{course.codigo}</div>
-								<div class="text-xs text-gray-500 dark:text-gray-400">{course.tipo_curso}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400 max-w-[150px] truncate" title={course.nombre_programa}>{course.nombre_programa}</div>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900 dark:text-white">{course.nombre_programa}</div>
+							<td class="px-3 py-4 whitespace-nowrap">
+								<div class="text-xs text-gray-900 dark:text-white capitalize"><span class="font-semibold">Tipo:</span> {course.tipo_curso}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400 capitalize"><span class="font-semibold">Mod:</span> {course.modalidad}</div>
+								{#if course.observacion}
+									<div class="text-xs text-blue-500 truncate max-w-[100px]" title={course.observacion}>Obs...</div>
+								{/if}
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900 dark:text-white capitalize">{course.modalidad}</div>
+							<td class="px-3 py-4 whitespace-nowrap">
+								<div class="text-xs text-gray-900 dark:text-white">T: {course.costo_total_interno}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">M: {course.matricula_interno}</div>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-xs text-gray-500 dark:text-gray-400">
-									{new Date(course.fecha_inicio).toLocaleDateString()} - {new Date(course.fecha_fin).toLocaleDateString()}
-								</div>
+							<td class="px-3 py-4 whitespace-nowrap">
+								<div class="text-xs text-gray-900 dark:text-white">T: {course.costo_total_externo}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">M: {course.matricula_externo}</div>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap">
+							<td class="px-3 py-4 whitespace-nowrap">
+								<div class="text-xs text-gray-900 dark:text-white">Cuotas: {course.cantidad_cuotas}</div>
+								<div class="text-xs text-green-600 dark:text-green-400">Desc: {course.descuento_curso}%</div>
+							</td>
+							<td class="px-3 py-4 whitespace-nowrap">
+								<div class="text-xs text-gray-900 dark:text-white">I: {new Date(course.fecha_inicio).toLocaleDateString()}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">F: {new Date(course.fecha_fin).toLocaleDateString()}</div>
+							</td>
+							<td class="px-3 py-4 whitespace-nowrap">
 								<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${course.activo ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
 									{course.activo ? 'Activo' : 'Inactivo'}
 								</span>
 							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+							<td class="px-3 py-4 whitespace-nowrap text-right text-sm font-medium relative">
 								<button onclick={() => toggleDropdown(course._id)} class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
 									<DotsVerticalIcon class="size-5" />
 								</button>

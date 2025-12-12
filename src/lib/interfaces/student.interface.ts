@@ -36,7 +36,7 @@ export interface Student {
 export interface CreateStudentRequest {
 	registro: string;
 	carnet: string;
-	password?: string;
+	//password?: string;
 	nombre: string;
 	extension: string;
 	fecha_nacimiento: string;
@@ -45,7 +45,7 @@ export interface CreateStudentRequest {
 	email: string;
 	domicilio: string;
 	es_estudiante_interno: string;
-	lista_cursos_ids?: string[];
+	// lista_cursos_ids?: string[];
 }
 
 export interface UpdateStudentRequest extends Partial<CreateStudentRequest> {

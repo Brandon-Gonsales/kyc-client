@@ -77,8 +77,8 @@
 				email: student.email,
 				domicilio: student.domicilio,
 				es_estudiante_interno: student.es_estudiante_interno,
-				password: '',
-				lista_cursos_ids: student.lista_cursos_ids || []
+				// password: '',
+				//lista_cursos_ids: student.lista_cursos_ids || []
 			};
 			active = student.activo;
 			
@@ -106,8 +106,8 @@
 				email: '',
 				domicilio: '',
 				es_estudiante_interno: 'interno',
-				password: '',
-				lista_cursos_ids: []
+				// password: '',
+				//lista_cursos_ids: []
 			};
 			active = true;
 			tituloData = { titulo: '', numero_titulo: '', año_expedicion: '', universidad: '' };
@@ -126,7 +126,7 @@
 				savedStudent = await studentService.update(student._id, {
 					...formData,
 					activo: active,
-					password: formData.password || undefined,
+					// password: formData.password || undefined,
 					titulo: hasTituloData ? tituloData : undefined
 				});
 				alert('success', 'Estudiante actualizado correctamente');
@@ -221,7 +221,7 @@
 				<option value="externo">Externo</option>
 			</Select>
 			
-			<div class="relative w-full">
+			<!-- <div class="relative w-full">
 				{#if !isEditMode}
 					<div class="relative">
 						<Input label="Contraseña" id="password" type={showPassword ? 'text' : 'password'} bind:value={formData.password} required={!isEditMode} placeholder="********" />
@@ -232,12 +232,12 @@
 				{:else}
 					<Input label="Nueva Contraseña" id="password" type="password" bind:value={formData.password} placeholder="Opcional" />
 				{/if}
-			</div>
+			</div> -->
 		</div>
 	</div>
 
 	<!-- Course Selection -->
-	<div class="p-6 shadow-sm">
+	<!-- <div class="p-6 shadow-sm">
 		<div class="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
 			<div class="rounded-lg bg-green-50 p-2 text-green-600 dark:bg-green-900/20 dark:text-green-400">
 				<CollectionIcon class="size-6" />
@@ -246,9 +246,9 @@
 				<Heading level="h4" class="text-lg font-semibold text-gray-900 dark:text-white">Cursos Inscritos</Heading>
 				<p class="text-sm text-gray-500 dark:text-gray-400">Seleccione los cursos</p>
 			</div>
-		</div>
+		</div> -->
 
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded-lg dark:border-gray-700">
+		<!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded-lg dark:border-gray-700">
 			{#each courses as course}
 				<label class="flex items-center space-x-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">
 					<input 
@@ -272,8 +272,8 @@
 			{#if courses.length === 0}
 				<p class="text-sm text-gray-500 col-span-2 text-center py-4">No hay cursos disponibles.</p>
 			{/if}
-		</div>
-	</div>
+		</div> -->
+	<!-- </div> -->
 
 	<!-- Documents & Title -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
