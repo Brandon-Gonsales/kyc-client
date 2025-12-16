@@ -24,27 +24,27 @@
 	let totalPages = $state(1);
 
 	// Modal State
-	let isFormOpen = false;
-	let isDetailsOpen = false;
-	let selectedStudent: Student | null = null;
-	let isDeleteModalOpen = false;
-	let studentToDelete: Student | null = null;
-	let deleteLoading = false;
+	let isFormOpen :boolean= $state(false);
+	let isDetailsOpen :boolean= $state(false);
+	let selectedStudent: Student | null = $state(null);
+	let isDeleteModalOpen :boolean= $state(false);
+	let studentToDelete: Student | null = $state(null);
+	let deleteLoading :boolean= $state(false);
 	
 	// Verify/Reject State
-	let isVerifyModalOpen = false;
-	let isRejectModalOpen = false;
-	let studentToAction: Student | null = null;
-	let actionLoading = false;
-	let rejectReason = '';
+	let isVerifyModalOpen :boolean= $state(false);
+	let isRejectModalOpen :boolean= $state(false);
+	let studentToAction: Student | null = $state(null);
+	let actionLoading :boolean= $state(false);
+	let rejectReason :string= $state('');
 
 	// Dropdown state
-	let openDropdownId: string | null = null;
+	let openDropdownId: string | null = $state(null);
 
 	// Enrollments Modal State
-	let isEnrollmentsOpen = false;
-	let studentEnrollments: Enrollment[] = [];
-	let enrollmentsLoading = false;
+	let isEnrollmentsOpen :boolean= $state(false);
+	let studentEnrollments: Enrollment[] = $state([]);
+	let enrollmentsLoading :boolean= $state(false);
 
 	// Filters
 	let filters = {
@@ -54,11 +54,15 @@
 		curso_id: ''
 	};
 	let debounceTimer: any;
-	let allCourses: Course[] = [];
+	let allCourses: Course[] = $state([]);
 
 	async function loadCourses() {
 		try {
-			allCourses = (await courseService.getAll(0, 100)).data;
+			if (allCourses.length === 0) {
+				const coursesRes = await courseService.getAll(1, 100);
+				allCourses = coursesRes.data;
+			}
+			
 		} catch (error) {
 			console.error('Error fetching courses for filter', error);
 		}
