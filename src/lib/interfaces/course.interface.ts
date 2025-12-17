@@ -34,6 +34,7 @@ export interface CreateCourseRequest {
 	fecha_inicio: string;
 	fecha_fin: string;
 	activo: boolean;
+	descuento_id?: string;
 }
 
 export interface UpdateCourseRequest extends Partial<CreateCourseRequest> {

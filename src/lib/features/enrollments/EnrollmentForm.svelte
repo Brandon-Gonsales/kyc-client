@@ -1,11 +1,12 @@
-<script lang="ts">
-	import { enrollmentService } from '$lib/services';
+	<script lang="ts">
+	import { enrollmentService, discountService } from '$lib/services';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
 	import { alert } from '$lib/utils';
 	import { CheckIcon } from '$lib/icons/outline';
-	import type { Course, CreateEnrollmentRequest, Enrollment, Student } from '$lib/interfaces';
+	import type { Course, CreateEnrollmentRequest, Enrollment, Student, Discount } from '$lib/interfaces';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		enrollment?: Enrollment | null;
@@ -19,11 +20,13 @@
 
 	let isEditMode = $derived(!!enrollment);
 	let saving = $state(false);
+	let discounts: Discount[] = $state([]);
 
 	let formData: CreateEnrollmentRequest = $state({
 		estudiante_id: '',
 		curso_id: '',
-		descuento_personalizado: 0
+		descuento_personalizado: 0,
+		descuento_id: ''
 	});
 
 	let editData = $state({
@@ -33,12 +36,23 @@
 		saldo_pendiente: 0
 	});
 
+	onMount(async () => {
+		try {
+			const res = await discountService.getAll(1, 100);
+			discounts = res.data;
+		} catch (e) {
+			console.error('Error fetching discounts', e);
+		}
+	});
+
 	$effect(() => {
 		if (enrollment) {
 			formData = {
 				estudiante_id: enrollment.estudiante_id,
 				curso_id: enrollment.curso_id,
-				descuento_personalizado: enrollment.descuento_personalizado
+				descuento_personalizado: enrollment.descuento_personalizado,
+				// Assuming similar logic for enrollment updates if applicable
+				descuento_id: '' // Usually we don't update this on edit for enrollments based on standard flows, but if needed we can map it
 			};
 			editData = {
 				estado: enrollment.estado,
@@ -50,7 +64,8 @@
 			formData = {
 				estudiante_id: '',
 				curso_id: '',
-				descuento_personalizado: 0
+				descuento_personalizado: 0,
+				descuento_id: ''
 			};
 			editData = {
 				estado: 'activo',
@@ -65,16 +80,26 @@
 		saving = true;
 		try {
 			if (isEditMode && enrollment) {
-				await enrollmentService.update(enrollment._id, {
+				const updateData: any = {
 					estado: editData.estado,
 					descuento_personalizado: formData.descuento_personalizado,
 					total_a_pagar: editData.total_a_pagar,
 					total_pagado: editData.total_pagado,
-					saldo_pendiente: editData.saldo_pendiente
-				});
+					saldo_pendiente: editData.saldo_pendiente,
+					// Include other fields if PUT requires full object
+				};
+				if (formData.descuento_id) {
+					updateData.descuento_id = formData.descuento_id;
+				}
+
+				await enrollmentService.update(enrollment._id, updateData);
 				alert('success', 'Inscripción actualizada correctamente');
 			} else {
-				await enrollmentService.create(formData);
+				const createData = { ...formData };
+				if (!createData.descuento_id) {
+					delete createData.descuento_id;
+				}
+				await enrollmentService.create(createData);
 				alert('success', 'Inscripción creada correctamente');
 			}
 			onSuccess();
@@ -118,9 +143,19 @@
 					<p class="font-medium text-gray-900 dark:text-white">{courses.find(c => c._id === formData.curso_id)?.nombre_programa || 'Desconocido'}</p>
 				</div>
 			{/if}
+			
+			<Select 
+				label="Descuento Personal (Beca)"
+				bind:value={formData.descuento_id}
+			>
+				<option value="">Ninguno</option>
+				{#each discounts as discount}
+					<option value={discount._id}>{discount.nombre} ({discount.porcentaje}%)</option>
+				{/each}
+			</Select>
 
 			<Input
-				label="Descuento Personalizado"
+				label="Descuento Adicional ($)"
 				id="descuento_personalizado"
 				type="number"
 				bind:value={formData.descuento_personalizado}

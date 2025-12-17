@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { courseService } from '$lib/services';
-	import type { CreateCourseRequest, Course } from '$lib/interfaces';
+	import { courseService, discountService } from '$lib/services';
+	import type { CreateCourseRequest, Course, Discount } from '$lib/interfaces';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
@@ -8,6 +8,7 @@
 	import Heading from '$lib/components/ui/heading.svelte';
 	import { alert } from '$lib/utils';
 	import { CheckIcon } from '$lib/icons/outline';
+	import { onMount } from 'svelte';
 
 	interface Props {
 		course?: Course | null;
@@ -19,6 +20,7 @@
 
 	let isEditMode = $derived(!!course);
 	let saving = $state(false);
+	let discounts: Discount[] = $state([]);
 
 	let formData: CreateCourseRequest = $state({
 		codigo: '',
@@ -31,10 +33,20 @@
 		matricula_externo: 0,
 		cantidad_cuotas: 1,
 		descuento_curso: 0,
+		descuento_id: '',
 		observacion: '',
 		fecha_inicio: '',
 		fecha_fin: '',
 		activo: true
+	});
+	
+	onMount(async () => {
+		try {
+			const res = await discountService.getAll(1, 100);
+			discounts = res.data;
+		} catch (e) {
+			console.error('Error fetching discounts', e);
+		}
 	});
 
 	$effect(() => {
@@ -50,6 +62,11 @@
 				matricula_externo: course.matricula_externo,
 				cantidad_cuotas: course.cantidad_cuotas,
 				descuento_curso: course.descuento_curso,
+				// Assuming course interface assumes descuento_id might be missing in old data
+				// We don't have it in the Interface locally yet, but we updated it. 
+				// However, if the backend sends it, we should use it. 
+				// For now let's assume it might be there or not.
+				descuento_id: (course as any).descuento_id || '',
 				observacion: course.observacion,
 				fecha_inicio: course.fecha_inicio.split('T')[0],
 				fecha_fin: course.fecha_fin.split('T')[0],
@@ -67,6 +84,7 @@
 				matricula_externo: 0,
 				cantidad_cuotas: 1,
 				descuento_curso: 0,
+				descuento_id: '',
 				observacion: '',
 				fecha_inicio: '',
 				fecha_fin: '',
@@ -78,11 +96,20 @@
 	async function handleSubmit() {
 		saving = true;
 		try {
+			const payload = { ...formData };
+			if (!payload.descuento_id) {
+				delete payload.descuento_id;
+			}
+			
 			if (isEditMode && course) {
-				await courseService.update(course._id, formData);
+				const updatePayload = {
+					...payload,
+					inscritos: course.inscritos
+				};
+				await courseService.update(course._id, updatePayload);
 				alert('success', 'Curso actualizado correctamente');
 			} else {
-				await courseService.create(formData);
+				await courseService.create(payload);
 				alert('success', 'Curso creado correctamente');
 			}
 			onSuccess();
@@ -204,6 +231,16 @@
 				bind:value={formData.cantidad_cuotas}
 				required
 			/>
+			<Select 
+				label="Descuento Global"
+				bind:value={formData.descuento_id}
+			>
+				<option value="">Ninguno</option>
+				{#each discounts as discount}
+					<option value={discount._id}>{discount.nombre} ({discount.porcentaje}%)</option>
+				{/each}
+			</Select>
+			<!-- 
 			<Input
 				label="Descuento Curso (%)"
 				id="descuento_curso"
@@ -211,6 +248,7 @@
 				bind:value={formData.descuento_curso}
 				required
 			/>
+			-->
 		</div>
 
 		<div class="md:col-span-2">

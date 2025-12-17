@@ -23,10 +23,10 @@
 	let error = $state('');
 
 	// Pagination state
-	let page = $state(1);
-	let limit = $state(10);
-	let totalItems = $state(0);
-	let totalPages = $state(1);
+	let page: number = $state(1);
+	let limit: number = $state(10);
+	let totalItems: number = $state(0);
+	let totalPages: number = $state(1);
 
 	// Filter state
 	let filters = {
@@ -38,11 +38,11 @@
 	let debounceTimer: any;
 
 	// Modal state
-	let isFormOpen = $state(false);
+	let isFormOpen: boolean = $state(false);
 	let selectedEnrollment: Enrollment | null = $state(null);
-	let showDeleteModal = $state(false);
+	let showDeleteModal: boolean = $state(false);
 	let enrollmentToDelete: Enrollment | null = $state(null);
-	let deleteLoading = $state(false);
+	let deleteLoading: boolean = $state(false);
 
 	// Dropdown state
 	let openDropdownId: string | null = $state(null);
@@ -317,7 +317,8 @@
 						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montos</th>
 						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saldo</th>
 						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
-						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descuento</th>
+						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">D. Curso</th>
+						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">D. Personal</th>
 						<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
 						<th scope="col" class="relative px-6 py-3">
 							<span class="sr-only">Acciones</span>
@@ -353,7 +354,12 @@
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
 								<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-green-800`}>
-									{enrollment.descuento_personalizado}
+									{enrollment.descuento_curso_aplicado || 0}%
+								</span>
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap">
+								<span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full text-green-800`}>
+									${enrollment.descuento_personalizado || 0}
 								</span>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
