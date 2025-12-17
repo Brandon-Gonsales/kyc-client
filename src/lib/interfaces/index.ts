@@ -1,6 +1,7 @@
 export * from "./auth.interface"
 export * from "./error.interface"
 export * from "./user.interface"
+export * from './paymentConfig.interface';
 export * from "./dropdownOption.interface"
 export * from "./student.interface"
 export * from "./course.interface"

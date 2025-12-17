@@ -68,4 +68,5 @@ export { default as ExclamationIcon } from './exclamationIcon.svelte';
 export { default as UploadIcon } from './uploadIcon.svelte';
 export { default as XMarkIcon } from './xmarkIcon.svelte';
 export { default as BuildingOfficeIcon } from './buildingOfficeIcon.svelte';
-export { default as ArrowDownTrayIcon } from './downloadIcon.svelte';
+export * from './qrCodeIcon.svelte';
+export { default as QrCodeIcon } from './qrCodeIcon.svelte';

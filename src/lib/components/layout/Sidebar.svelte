@@ -7,9 +7,8 @@
 		TagIcon, 
 		XIcon,
 		KeyIcon,
-
+		QrCodeIcon,
 		FileTextIcon
-
 	} from '$lib/icons/outline';
 	import { slide } from 'svelte/transition';
 	import Menu2Icon from '$lib/icons/outline/menu2Icon.svelte';
@@ -34,6 +33,7 @@
 		{ name: 'Pagos', href: '/app/payments', icon: CreditCardIcon, roles: ['admin', 'superadmin', 'student'] },
 		{ name: 'Descuentos', href: '/app/discounts', icon: TagIcon, roles: ['admin', 'superadmin'] },
 		{ name: 'Usuarios', href: '/app/users', icon: UsersIcon, roles: ['admin', 'superadmin'] },
+		{ name: 'Info. Pagos', href: '/app/payment-config', icon: QrCodeIcon, roles: ['admin', 'superadmin', 'student'] },
 		{ name: 'Contraseña', href: '/app/change-password', icon: KeyIcon, roles: ['student'] },
 	];
 

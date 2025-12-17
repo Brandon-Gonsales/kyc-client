@@ -6,3 +6,4 @@ export * from './enrollment.service';
 export * from './payment.service';
 export * from './discount.service';
 export * from './user.service';
+export * from './paymentConfig.service';

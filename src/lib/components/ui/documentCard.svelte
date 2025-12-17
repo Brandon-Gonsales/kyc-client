@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { IdentificationIcon, AcademicCapIcon, ArrowDownTrayIcon, PencilIcon } from '$lib/icons/outline';
+	import { IdentificationIcon, AcademicCapIcon, PencilIcon } from '$lib/icons/outline';
+	import DownloadIcon from '$lib/icons/outline/downloadIcon.svelte';
 	import { FileUpload } from '.';
 
 	interface Props {
@@ -85,7 +86,7 @@
 					download
 					class="text-xs text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
 				>
-					<ArrowDownTrayIcon class="size-3" />
+					<DownloadIcon class="size-3" />
 					Descargar
 				</a>
 			</div>
