@@ -1,3 +1,4 @@
+// student.interface.ts
 export interface Titulo {
 	año_expedicion: string;
 	estado: string;
@@ -73,4 +74,9 @@ export interface VerifyTituloData {
 	numero_titulo?: string;
 	año_expedicion?: string;
 	universidad?: string;
+}
+
+export interface UpdateStudentSelfRequest {
+	celular?: string;
+	domicilio?: string;
 }

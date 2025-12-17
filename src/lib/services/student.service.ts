@@ -4,7 +4,10 @@ import type {
 	CreateStudentRequest,
 	UpdateStudentRequest,
 	TituloData,
-	VerifyTituloData
+	VerifyTituloData,
+	ChangePasswordRequest,
+	PaginatedResponse,
+	UpdateStudentSelfRequest
 } from '$lib/interfaces';
 
 class StudentService {
@@ -17,7 +20,7 @@ class StudentService {
 			estado_titulo?: string;
 			curso_id?: string;
 		}
-	): Promise<import('$lib/interfaces/response.interface').PaginatedResponse<Student>> {
+	): Promise<PaginatedResponse<Student>> {
 		const params = new URLSearchParams({
 			page: page.toString(),
 			per_page: per_page.toString()
@@ -28,7 +31,7 @@ class StudentService {
 		if (filters?.estado_titulo) params.append('estado_titulo', filters.estado_titulo);
 		if (filters?.curso_id) params.append('curso_id', filters.curso_id);
 
-		return await apiKyC.get<import('$lib/interfaces/response.interface').PaginatedResponse<Student>>(`/students/?${params.toString()}`);
+		return await apiKyC.get<PaginatedResponse<Student>>(`/students/?${params.toString()}`);
 	}
 
 	async getById(id: string): Promise<Student> {
@@ -107,8 +110,12 @@ class StudentService {
 		});
 	}
 
-	async changePassword(data: import('$lib/interfaces').ChangePasswordRequest): Promise<void> {
+	async changePassword(data: ChangePasswordRequest): Promise<void> {
 		return await apiKyC.post<void>('/students/me/change-password', data);
+	}
+
+	async updateSelf(data: UpdateStudentSelfRequest): Promise<Student> {
+		return await apiKyC.put<Student>('/students/me', data);
 	}
 }
 

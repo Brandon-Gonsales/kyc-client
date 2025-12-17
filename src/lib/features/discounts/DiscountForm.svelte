@@ -138,7 +138,7 @@
 			/>
 		</div>
 
-		<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+		<!-- <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
 			<Heading level="h3" class="mb-4 text-lg">Beneficiarios</Heading>
 			
 			<div class="flex gap-4 mb-4">
@@ -182,7 +182,7 @@
 			{:else}
 				<p class="text-sm text-gray-500 dark:text-gray-400 italic">No hay estudiantes seleccionados.</p>
 			{/if}
-		</div>
+		</div> -->
 
 		<div class="flex items-center gap-2 pt-4">
 			<input

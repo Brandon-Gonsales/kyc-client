@@ -10,3 +10,4 @@ export { default as DropdownMenu } from './dropdownMenu.svelte';
 export { default as BlurOverlay } from './blurOverlay.svelte';
 export { default as FileUpload } from './fileUpload.svelte';
 export { default as Pagination } from './pagination.svelte';
+export { default as DocumentCard } from './documentCard.svelte';

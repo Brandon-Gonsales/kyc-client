@@ -154,13 +154,13 @@
 				{/each}
 			</Select>
 
-			<Input
+			<!-- <Input
 				label="Descuento Adicional ($)"
 				id="descuento_personalizado"
 				type="number"
 				bind:value={formData.descuento_personalizado}
 				required
-			/>
+			/> -->
 
 			{#if isEditMode}
 				<Select
