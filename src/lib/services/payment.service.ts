@@ -1,5 +1,5 @@
 import { apiKyC } from '$lib/config';
-import type { Payment, CreatePaymentRequest, UpdatePaymentRequest } from '$lib/interfaces';
+import type { Payment, CreatePaymentFormData, UpdatePaymentRequest } from '$lib/interfaces';
 
 class PaymentService {
 	async getAll(
@@ -27,8 +27,17 @@ class PaymentService {
 		);
 	}
 
-	async create(data: CreatePaymentRequest): Promise<Payment> {
-		return await apiKyC.post<Payment>('/payments/', data);
+	async create(data: CreatePaymentFormData): Promise<Payment> {
+		const formData = new FormData();
+		formData.append('file', data.file);
+		formData.append('inscripcion_id', data.inscripcion_id);
+		formData.append('numero_transaccion', data.numero_transaccion);
+		
+		if (data.descuento_aplicado) {
+			formData.append('descuento_aplicado', data.descuento_aplicado.toString());
+		}
+
+		return await apiKyC.post<Payment>('/payments/', formData);
 	}
 
 	async update(id: string, data: UpdatePaymentRequest): Promise<Payment> {

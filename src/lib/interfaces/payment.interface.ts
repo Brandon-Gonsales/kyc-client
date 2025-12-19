@@ -13,21 +13,14 @@ export interface Payment {
 	updated_at: string;
 }
 
-export interface CreatePaymentRequest {
-	cantidad_pago: number;
-	comprobante_url: string;
-	concepto: string;
+export interface CreatePaymentFormData {
+	file: File;
 	inscripcion_id: string;
 	numero_transaccion: string;
-	
-	// Fields needed if backend expects them, though strictly only the above 5 were in the user's example body.
-	// But usually we need student_id if not inferred from token.
-	// I'll leave them as optional or exclude if strictly following the body example. 
-	// However, to avoid type errors in possible existing code, I will keep standard ones or ensure type safety.
-	// User example body: cantidad_pago, comprobante_url, concepto, inscripcion_id, numero_transaccion.
+	descuento_aplicado?: number;
 }
 
-export interface UpdatePaymentRequest extends Partial<CreatePaymentRequest> {
+export interface UpdatePaymentRequest extends Partial<CreatePaymentFormData> {
 	estado_pago?: string;
 	fecha_pagada?: string;
 }
